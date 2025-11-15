@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
 Example usage of the agent system for database migration.
+
+Note: Run this script from the project root directory:
+    python scripts/example_usage.py
+
+Or install the package in development mode:
+    pip install -e .
 """
-
-import sys
-from pathlib import Path
-
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from agents.agent_router import AgentRouter
 from src.utils.config_loader import load_config

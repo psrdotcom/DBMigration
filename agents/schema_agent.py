@@ -41,9 +41,6 @@ class SchemaAgent(BaseAgent):
     
     def _migrate_schema(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Migrate schema using traditional converter with LLM assistance for edge cases."""
-        import sys
-        from pathlib import Path
-        sys.path.insert(0, str(Path(__file__).parent.parent))
         from src.migration.schema_converter import SchemaConverter
         from src.utils.config_loader import get_db_connections
         
