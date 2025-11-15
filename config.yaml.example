@@ -1,0 +1,30 @@
+# Oracle to PostgreSQL Migration Configuration
+
+# Oracle Database Configuration
+oracle:
+  host: localhost
+  port: 1521
+  service_name: ORCL
+  username: your_username
+  password: your_password
+  schema: YOUR_SCHEMA  # Optional, defaults to username
+
+# PostgreSQL Database Configuration
+postgresql:
+  host: localhost
+  port: 5432
+  database: your_database
+  username: your_username
+  password: your_password
+  schema: public  # Optional, defaults to 'public'
+
+# Migration Settings
+migration:
+  batch_size: 1000  # Number of rows to process per batch
+  tables:  # Optional: specific tables to migrate (leave empty for all tables)
+    # - table1
+    # - table2
+
+# Note: You can also use environment variables instead of hardcoding credentials
+# See .env.example for environment variable names
+
