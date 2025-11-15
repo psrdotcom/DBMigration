@@ -124,7 +124,7 @@ class DataAgent(BaseAgent):
                         'transformation_sql': sql_query
                     }
                 
-                return {'status': 'error', 'message': 'Transformation rules required'}
+                return {'status': 'error', 'message': f'Transformation rules required and LLM needed. Please set {self.provider.value.upper()}_API_KEY environment variable.'}
             finally:
                 oracle_conn.disconnect()
                 pg_conn.disconnect()
