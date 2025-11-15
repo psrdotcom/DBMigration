@@ -46,6 +46,9 @@ class ValidationAgent(BaseAgent):
         sys.path.insert(0, str(Path(__file__).parent.parent))
         from src.utils.config_loader import get_db_connections
         
+        oracle_conn = None
+        pg_conn = None
+        
         try:
             config = task.get('config')
             oracle_conn, pg_conn = get_db_connections(config)
@@ -64,36 +67,39 @@ class ValidationAgent(BaseAgent):
                     'constraint_validation': self._validate_constraints(oracle_conn, pg_conn)
                 }
                 
-                # Use LLM to generate comprehensive validation report
-                if self.llm_client:
-                    prompt = f"""
-                    Generate a comprehensive migration validation report:
-                    {str(validation_results)}
-                    
-                    Include:
-                    1. Summary of validation results
-                    2. Issues found
-                    3. Recommendations
-                    """
-                    
-                    report = self.call_llm(
-                        prompt,
-                        system_prompt="You are a database migration quality assurance expert."
-                    )
-                    
-                    validation_results['llm_report'] = report
+                Include:
+                1. Summary of validation results
+                2. Issues found
+                3. Recommendations
+                """
                 
-                return {
-                    'status': 'success',
-                    'validation': validation_results
-                }
-            finally:
-                oracle_conn.disconnect()
-                pg_conn.disconnect()
+                report = self.call_llm(
+                    prompt,
+                    system_prompt="You are a database migration quality assurance expert."
+                )
+                
+                validation_results['llm_report'] = report
+            
+            return {
+                'status': 'success',
+                'validation': validation_results
+            }
         
         except Exception as e:
             logger.error(f"Validation error: {e}")
             return {'status': 'error', 'message': str(e)}
+        
+        finally:
+            if oracle_conn:
+                try:
+                    oracle_conn.disconnect()
+                except Exception as e:
+                    logger.error(f"Error disconnecting Oracle connection: {e}")
+            if pg_conn:
+                try:
+                    pg_conn.disconnect()
+                except Exception as e:
+                    logger.error(f"Error disconnecting PostgreSQL connection: {e}")
     
     def _validate_schema(self, oracle_conn, pg_conn, sample_size: int = 10) -> Dict[str, Any]:
         """Validate schema conversion."""
@@ -141,6 +147,9 @@ class ValidationAgent(BaseAgent):
         sys.path.insert(0, str(Path(__file__).parent.parent))
         from src.utils.config_loader import get_db_connections
         
+        oracle_conn = None
+        pg_conn = None
+        
         try:
             config = task.get('config')
             oracle_conn, pg_conn = get_db_connections(config)
@@ -148,44 +157,52 @@ class ValidationAgent(BaseAgent):
             oracle_conn.connect()
             pg_conn.connect()
             
-            try:
-                # Get schema information
-                oracle_tables = oracle_conn.get_tables()
-                
-                comparison = {
-                    'table_count': {
-                        'oracle': len(oracle_tables),
-                        'postgresql': len([t for t in oracle_tables if pg_conn.table_exists(t)])
-                    }
+            # Get schema information
+            oracle_tables = oracle_conn.get_tables()
+            
+            comparison = {
+                'table_count': {
+                    'oracle': len(oracle_tables),
+                    'postgresql': len([t for t in oracle_tables if pg_conn.table_exists(t)])
                 }
+            }
+            
+            # Use LLM for detailed comparison analysis
+            if self.llm_client:
+                prompt = f"""
+                Compare Oracle and PostgreSQL databases:
+                {str(comparison)}
                 
-                # Use LLM for detailed comparison analysis
-                if self.llm_client:
-                    prompt = f"""
-                    Compare Oracle and PostgreSQL databases:
-                    {str(comparison)}
-                    
-                    Provide detailed comparison and identify any discrepancies.
-                    """
-                    
-                    analysis = self.call_llm(
-                        prompt,
-                        system_prompt="You are a database comparison expert."
-                    )
-                    
-                    comparison['llm_analysis'] = analysis
+                Provide detailed comparison and identify any discrepancies.
+                """
                 
-                return {
-                    'status': 'success',
-                    'comparison': comparison
-                }
-            finally:
-                oracle_conn.disconnect()
-                pg_conn.disconnect()
+                analysis = self.call_llm(
+                    prompt,
+                    system_prompt="You are a database comparison expert."
+                )
+                
+                comparison['llm_analysis'] = analysis
+            
+            return {
+                'status': 'success',
+                'comparison': comparison
+            }
         
         except Exception as e:
             logger.error(f"Comparison error: {e}")
             return {'status': 'error', 'message': str(e)}
+        
+        finally:
+            if oracle_conn:
+                try:
+                    oracle_conn.disconnect()
+                except Exception as e:
+                    logger.error(f"Error disconnecting Oracle connection: {e}")
+            if pg_conn:
+                try:
+                    pg_conn.disconnect()
+                except Exception as e:
+                    logger.error(f"Error disconnecting PostgreSQL connection: {e}")
     
     def _audit_migration(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Audit migration for compliance and best practices."""
