@@ -41,9 +41,6 @@ class ValidationAgent(BaseAgent):
     
     def _validate_migration(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Comprehensive migration validation."""
-        import sys
-        from pathlib import Path
-        sys.path.insert(0, str(Path(__file__).parent.parent))
         from src.utils.config_loader import get_db_connections
         
         try:
@@ -132,9 +129,6 @@ class ValidationAgent(BaseAgent):
     
     def _compare_databases(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Compare Oracle and PostgreSQL databases."""
-        import sys
-        from pathlib import Path
-        sys.path.insert(0, str(Path(__file__).parent.parent))
         from src.utils.config_loader import get_db_connections
         
         try:
