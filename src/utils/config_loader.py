@@ -24,8 +24,20 @@ def load_config(config_path: str) -> Dict[str, Any]:
         raise
 
 
-def get_db_connections(config: Dict[str, Any]):
-    """Create Oracle and PostgreSQL connections from config."""
+def get_db_connections(config: Dict[str, Any]) -> tuple:
+    """
+    Create Oracle and PostgreSQL connections from config.
+    
+    Args:
+        config: Configuration dictionary containing 'oracle' and 'postgresql' sections
+        
+    Returns:
+        tuple: (OracleConnector, PostgreSQLConnector) instances
+        
+    Raises:
+        KeyError: If required configuration keys are missing
+        ValueError: If configuration values are invalid
+    """
     from src.migration.db_connector import OracleConnector, PostgreSQLConnector
     
     # Oracle connection
