@@ -41,9 +41,6 @@ class DataAgent(BaseAgent):
     
     def _migrate_data(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Migrate data using traditional migrator."""
-        import sys
-        from pathlib import Path
-        sys.path.insert(0, str(Path(__file__).parent.parent))
         from src.migration.data_migrator import DataMigrator
         from src.utils.config_loader import get_db_connections
         
@@ -88,9 +85,6 @@ class DataAgent(BaseAgent):
     
     def _transform_data(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Transform data using LLM-generated transformation rules."""
-        import sys
-        from pathlib import Path
-        sys.path.insert(0, str(Path(__file__).parent.parent))
         from src.utils.config_loader import get_db_connections
         
         try:
@@ -135,9 +129,6 @@ class DataAgent(BaseAgent):
     
     def _validate_data(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Validate migrated data using LLM-assisted checks."""
-        import sys
-        from pathlib import Path
-        sys.path.insert(0, str(Path(__file__).parent.parent))
         from src.utils.config_loader import get_db_connections
         
         try:
