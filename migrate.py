@@ -84,15 +84,9 @@ def main():
     args = parser.parse_args()
     
     try:
-        # Load configuration
-        logger.info(f"Loading configuration from {args.config}")
-        config = load_config(args.config)
-        
-        # Initialize agent router
-        router = AgentRouter(config)
-        
-        # List agents if requested
+        # List agents if requested (before loading config)
         if args.list_agents:
+            router = AgentRouter()
             print("\nAvailable Agents:")
             print("=" * 50)
             capabilities = router.get_agent_capabilities()
@@ -101,6 +95,13 @@ def main():
                 for cap in caps:
                     print(f"  - {cap}")
             return 0
+        
+        # Load configuration for other operations
+        logger.info(f"Loading configuration from {args.config}")
+        config = load_config(args.config)
+        
+        # Initialize agent router
+        router = AgentRouter(config)
         
         # Handle query conversion
         if args.query:

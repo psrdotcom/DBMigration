@@ -53,16 +53,21 @@ class ValidationAgent(BaseAgent):
             oracle_conn.connect()
             pg_conn.connect()
             
-            try:
-                # Get sample sizes from task parameters with defaults
-                schema_sample_size = task.get('schema_sample_size', 10)
-                data_sample_size = task.get('data_sample_size', 5)
-                
-                validation_results = {
-                    'schema_validation': self._validate_schema(oracle_conn, pg_conn, schema_sample_size),
-                    'data_validation': self._validate_data(oracle_conn, pg_conn, data_sample_size),
-                    'constraint_validation': self._validate_constraints(oracle_conn, pg_conn)
-                }
+            # Get sample sizes from task parameters with defaults
+            schema_sample_size = task.get('schema_sample_size', 10)
+            data_sample_size = task.get('data_sample_size', 5)
+            
+            validation_results = {
+                'schema_validation': self._validate_schema(oracle_conn, pg_conn, schema_sample_size),
+                'data_validation': self._validate_data(oracle_conn, pg_conn, data_sample_size),
+                'constraint_validation': self._validate_constraints(oracle_conn, pg_conn)
+            }
+            
+            # Use LLM to generate comprehensive validation report
+            if self.llm_client:
+                prompt = f"""
+                Generate a comprehensive migration validation report:
+                {str(validation_results)}
                 
                 Include:
                 1. Summary of validation results
