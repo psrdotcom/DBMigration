@@ -102,16 +102,25 @@ def main():
                     print(f"  - {cap}")
             return 0
         
-        # Prepare task
+        # Handle query conversion
         if args.query:
-            # Query conversion task
             task = {
                 'type': 'convert_query',
                 'query': args.query,
                 'config': config
             }
-        elif args.task:
-            # Specific task type
+            logger.info(f"Executing task: {task.get('type')}")
+            result = router.execute_task(task)
+            
+            if result.get('status') == 'error':
+                logger.error(f"Task failed: {result.get('message')}")
+                return 1
+            
+            logger.info("Task completed successfully!")
+            return 0
+        
+        # Handle specific task type
+        if args.task:
             task = {
                 'type': args.task,
                 'config': config,
@@ -119,55 +128,53 @@ def main():
                 'truncate': args.truncate,
                 'batch_size': args.batch_size
             }
-        else:
-            # Default migration task
-            tasks = []
+            logger.info(f"Executing task: {task.get('type')}")
+            result = router.execute_task(task)
             
-            if not args.data_only:
-                tasks.append({
-                    'type': 'schema_migration',
-                    'config': config,
-                    'tables': [t.strip() for t in args.tables.split(',')] if args.tables else None
-                })
+            if result.get('status') == 'error':
+                logger.error(f"Task failed: {result.get('message')}")
+                return 1
             
-            if not args.schema_only:
-                tasks.append({
-                    'type': 'data_migration',
-                    'config': config,
-                    'tables': [t.strip() for t in args.tables.split(',')] if args.tables else None,
-                    'truncate': args.truncate,
-                    'batch_size': args.batch_size
-                })
-            
-            # Execute tasks
-            all_results = []
-            for task in tasks:
-                logger.info(f"Executing task: {task['type']}")
-                result = router.execute_task(task)
-                all_results.append(result)
-                
-                if result.get('status') == 'error':
-                    logger.error(f"Task {task['type']} failed: {result.get('message')}")
-                    return 1
-            
-            # Summary
-            logger.info("=" * 50)
-            logger.info("Migration Summary:")
-            for result in all_results:
-                logger.info(f"  {result.get('agent', 'Unknown')}: {result.get('status', 'unknown')}")
-            
-            logger.info("Migration completed successfully!")
+            logger.info("Task completed successfully!")
             return 0
         
-        # Execute single task
-        logger.info(f"Executing task: {task.get('type')}")
-        result = router.execute_task(task)
+        # Default migration task
+        tasks = []
         
-        if result.get('status') == 'error':
-            logger.error(f"Task failed: {result.get('message')}")
-            return 1
+        if not args.data_only:
+            tasks.append({
+                'type': 'schema_migration',
+                'config': config,
+                'tables': [t.strip() for t in args.tables.split(',')] if args.tables else None
+            })
         
-        logger.info("Task completed successfully!")
+        if not args.schema_only:
+            tasks.append({
+                'type': 'data_migration',
+                'config': config,
+                'tables': [t.strip() for t in args.tables.split(',')] if args.tables else None,
+                'truncate': args.truncate,
+                'batch_size': args.batch_size
+            })
+        
+        # Execute tasks
+        all_results = []
+        for task in tasks:
+            logger.info(f"Executing task: {task['type']}")
+            result = router.execute_task(task)
+            all_results.append(result)
+            
+            if result.get('status') == 'error':
+                logger.error(f"Task {task['type']} failed: {result.get('message')}")
+                return 1
+        
+        # Summary
+        logger.info("=" * 50)
+        logger.info("Migration Summary:")
+        for result in all_results:
+            logger.info(f"  {result.get('agent', 'Unknown')}: {result.get('status', 'unknown')}")
+        
+        logger.info("Migration completed successfully!")
         return 0
         
     except KeyboardInterrupt:

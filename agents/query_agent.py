@@ -72,7 +72,7 @@ class QueryAgent(BaseAgent):
                 'converted_query': converted_query
             }
         
-        return {'status': 'error', 'message': 'LLM required for query conversion'}
+        return {'status': 'error', 'message': f'LLM required for query conversion. Please set {self.provider.value.upper()}_API_KEY environment variable.'}
     
     def _optimize_query(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Optimize PostgreSQL query."""
@@ -103,7 +103,7 @@ class QueryAgent(BaseAgent):
                 'optimization': optimization
             }
         
-        return {'status': 'error', 'message': 'LLM required for query optimization'}
+        return {'status': 'error', 'message': f'LLM required for query optimization. Please set {self.provider.value.upper()}_API_KEY environment variable.'}
     
     def _analyze_query(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze query for migration compatibility."""
@@ -135,7 +135,7 @@ class QueryAgent(BaseAgent):
                 'analysis': analysis
             }
         
-        return {'status': 'error', 'message': 'LLM required for query analysis'}
+        return {'status': 'error', 'message': f'LLM required for query analysis. Please set {self.provider.value.upper()}_API_KEY environment variable.'}
     
     def get_capabilities(self) -> List[str]:
         """Get agent capabilities."""

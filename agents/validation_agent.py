@@ -56,17 +56,16 @@ class ValidationAgent(BaseAgent):
             oracle_conn.connect()
             pg_conn.connect()
             
-            validation_results = {
-                'schema_validation': self._validate_schema(oracle_conn, pg_conn),
-                'data_validation': self._validate_data(oracle_conn, pg_conn),
-                'constraint_validation': self._validate_constraints(oracle_conn, pg_conn)
-            }
-            
-            # Use LLM to generate comprehensive validation report
-            if self.llm_client:
-                prompt = f"""
-                Generate a comprehensive migration validation report:
-                {str(validation_results)}
+            try:
+                # Get sample sizes from task parameters with defaults
+                schema_sample_size = task.get('schema_sample_size', 10)
+                data_sample_size = task.get('data_sample_size', 5)
+                
+                validation_results = {
+                    'schema_validation': self._validate_schema(oracle_conn, pg_conn, schema_sample_size),
+                    'data_validation': self._validate_data(oracle_conn, pg_conn, data_sample_size),
+                    'constraint_validation': self._validate_constraints(oracle_conn, pg_conn)
+                }
                 
                 Include:
                 1. Summary of validation results
@@ -102,12 +101,12 @@ class ValidationAgent(BaseAgent):
                 except Exception as e:
                     logger.error(f"Error disconnecting PostgreSQL connection: {e}")
     
-    def _validate_schema(self, oracle_conn, pg_conn) -> Dict[str, Any]:
+    def _validate_schema(self, oracle_conn, pg_conn, sample_size: int = 10) -> Dict[str, Any]:
         """Validate schema conversion."""
         oracle_tables = oracle_conn.get_tables()
         pg_tables = []
         
-        for table in oracle_tables[:10]:  # Sample
+        for table in oracle_tables[:sample_size]:
             if pg_conn.table_exists(table):
                 pg_tables.append(table)
         
@@ -117,9 +116,9 @@ class ValidationAgent(BaseAgent):
             'coverage': len(pg_tables) / len(oracle_tables) if oracle_tables else 0
         }
     
-    def _validate_data(self, oracle_conn, pg_conn) -> Dict[str, Any]:
+    def _validate_data(self, oracle_conn, pg_conn, sample_size: int = 5) -> Dict[str, Any]:
         """Validate data migration."""
-        tables = oracle_conn.get_tables()[:5]  # Sample
+        tables = oracle_conn.get_tables()[:sample_size]
         results = {}
         
         for table in tables:
@@ -228,7 +227,7 @@ class ValidationAgent(BaseAgent):
                 'audit_checklist': checklist
             }
         
-        return {'status': 'error', 'message': 'LLM required for audit'}
+        return {'status': 'error', 'message': f'LLM required for audit. Please set {self.provider.value.upper()}_API_KEY environment variable.'}
     
     def get_capabilities(self) -> List[str]:
         """Get agent capabilities."""
