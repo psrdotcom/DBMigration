@@ -42,8 +42,10 @@ class QueryAgent(BaseAgent):
     def _convert_query(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Convert Oracle SQL to PostgreSQL SQL."""
         oracle_query = task.get('query')
-        if not oracle_query:
-            return {'status': 'error', 'message': 'Query required'}
+        if not oracle_query or not isinstance(oracle_query, str):
+            return {'status': 'error', 'message': 'Valid query string required'}
+        if not oracle_query.strip():
+            return {'status': 'error', 'message': 'Query cannot be empty'}
         
         if self.llm_client:
             prompt = f"""
