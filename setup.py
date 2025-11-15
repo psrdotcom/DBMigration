@@ -21,7 +21,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "db-migrate=migrate:main",
+            "db-migrate=src.migrate:main",
         ],
     },
     python_requires=">=3.8",
