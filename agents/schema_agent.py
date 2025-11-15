@@ -176,7 +176,7 @@ class SchemaAgent(BaseAgent):
                         'suggestions': suggestions
                     }
                 
-                return {'status': 'success', 'message': 'Schema optimization requires LLM'}
+                return {'status': 'success', 'message': f'Schema optimization requires LLM. Please set {self.provider.value.upper()}_API_KEY environment variable.'}
             finally:
                 pg_conn.disconnect()
         

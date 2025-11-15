@@ -210,7 +210,7 @@ class ValidationAgent(BaseAgent):
                 'audit_checklist': checklist
             }
         
-        return {'status': 'error', 'message': 'LLM required for audit'}
+        return {'status': 'error', 'message': f'LLM required for audit. Please set {self.provider.value.upper()}_API_KEY environment variable.'}
     
     def get_capabilities(self) -> List[str]:
         """Get agent capabilities."""

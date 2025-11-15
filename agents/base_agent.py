@@ -54,7 +54,7 @@ class BaseAgent(ABC):
                 from openai import OpenAI
                 api_key = os.getenv('OPENAI_API_KEY')
                 if not api_key:
-                    logger.warning("OPENAI_API_KEY not set, LLM features will be disabled")
+                    logger.warning("OPENAI_API_KEY not set. LLM features will be disabled. Set OPENAI_API_KEY environment variable to enable.")
                     return None
                 return OpenAI(api_key=api_key)
             
@@ -62,7 +62,7 @@ class BaseAgent(ABC):
                 from anthropic import Anthropic
                 api_key = os.getenv('ANTHROPIC_API_KEY')
                 if not api_key:
-                    logger.warning("ANTHROPIC_API_KEY not set, LLM features will be disabled")
+                    logger.warning("ANTHROPIC_API_KEY not set. LLM features will be disabled. Set ANTHROPIC_API_KEY environment variable to enable.")
                     return None
                 return Anthropic(api_key=api_key)
             
