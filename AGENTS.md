@@ -110,10 +110,16 @@ result = router.execute_task(task)
 ```python
 task = {
     'type': 'validate',
-    'config': config
+    'config': config,
+    'schema_sample_size': 10,  # Optional: Number of tables to sample for schema validation (default: 10)
+    'data_sample_size': 5       # Optional: Number of tables to sample for data validation (default: 5)
 }
 result = router.execute_task(task)
 ```
+
+**Parameters**:
+- `schema_sample_size`: Number of tables to validate for schema migration (default: 10)
+- `data_sample_size`: Number of tables to validate for data migration (default: 5)
 
 ### 4. QueryAgent
 

@@ -75,7 +75,9 @@ def example_validation():
     
     task = {
         'type': 'validate',
-        'config': config
+        'config': config,
+        'schema_sample_size': 10,  # Number of tables to sample for schema validation (default: 10)
+        'data_sample_size': 5       # Number of tables to sample for data validation (default: 5)
     }
     
     result = router.execute_task(task)
