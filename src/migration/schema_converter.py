@@ -4,8 +4,8 @@ Schema conversion utilities for Oracle to PostgreSQL migration.
 
 import logging
 from typing import List, Dict, Any
-from db_connector import OracleConnector, PostgreSQLConnector
-from type_mapper import TypeMapper
+from .db_connector import OracleConnector, PostgreSQLConnector
+from .type_mapper import TypeMapper
 
 logger = logging.getLogger(__name__)
 
