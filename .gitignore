@@ -28,6 +28,7 @@ wheels/
 
 # Configuration files with credentials
 config.yaml
+config/config.yaml
 
 # Logs
 *.log

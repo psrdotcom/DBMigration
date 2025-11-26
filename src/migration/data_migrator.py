@@ -5,7 +5,7 @@ Data migration utilities for Oracle to PostgreSQL.
 import logging
 from typing import List, Optional
 from tqdm import tqdm
-from db_connector import OracleConnector, PostgreSQLConnector
+from .db_connector import OracleConnector, PostgreSQLConnector
 
 logger = logging.getLogger(__name__)
 

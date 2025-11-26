@@ -136,14 +136,16 @@ class OracleConnector:
         """Get indexes for a table."""
         query = """
             SELECT 
-                index_name,
-                column_name,
-                column_position,
-                uniqueness
-            FROM all_ind_columns
-            WHERE table_owner = :schema
-            AND table_name = :table_name
-            ORDER BY index_name, column_position
+                aic.index_name,
+                aic.column_name,
+                aic.column_position,
+                ai.uniqueness
+            FROM all_ind_columns aic
+            JOIN all_indexes ai ON aic.index_owner = ai.owner 
+                AND aic.index_name = ai.index_name
+            WHERE aic.table_owner = :schema
+            AND aic.table_name = :table_name
+            ORDER BY aic.index_name, aic.column_position
         """
         return self.execute_query(query, {
             'schema': self.schema.upper(),

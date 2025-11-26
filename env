@@ -1,0 +1,20 @@
+# Rename this file to .env and update the values
+
+# Oracle
+ORACLE_HOST=localhost
+ORACLE_PORT=1521
+ORACLE_SERVICE_NAME=XEPDB1
+ORACLE_USERNAME=testuser
+ORACLE_PASSWORD=testpass
+ORACLE_SYS_PASSWORD=Oracle123
+
+# PostgreSQL
+PG_HOST=localhost
+PG_PORT=5432
+PG_DATABASE=migration_test
+PG_USERNAME=testuser
+PG_PASSWORD=testpass
+
+# Test connection:
+# psql -h PG_HOST -U PG_USERNAME -d PG_DATABASE
+# sqlplus ORACLE_USERNAME/ORACLE_PASSWORD@ORACLE_HOST:ORACLE_PORT/ORACLE_SERVICE_NAME

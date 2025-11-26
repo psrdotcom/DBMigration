@@ -1,19 +1,26 @@
 #!/usr/bin/env python3
 """
-Main migration script for Oracle to PostgreSQL migration.
+Main migration script for Oracle to PostgreSQL migration with agent system.
 """
 
 import argparse
 import logging
 import sys
-import yaml
 from pathlib import Path
 from dotenv import load_dotenv
-import os
 
-from db_connector import OracleConnector, PostgreSQLConnector
-from schema_converter import SchemaConverter
-from data_migrator import DataMigrator
+from agents.agent_router import AgentRouter
+from src.utils.config_loader import load_config
+
+# Initialize Oracle Client for macOS
+try:
+    import cx_Oracle
+    import platform
+    if platform.system() == "Darwin":
+        lib_dir = "~/oracle/instantclient_23_3"
+        cx_Oracle.init_oracle_client(lib_dir=lib_dir)
+except Exception:
+    pass  # Ignore if cx_Oracle is not installed or already initialized
 
 # Load environment variables
 load_dotenv()
@@ -31,54 +38,21 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def load_config(config_path: str) -> dict:
-    """Load configuration from YAML file."""
-    try:
-        with open(config_path, 'r') as f:
-            config = yaml.safe_load(f)
-        return config
-    except Exception as e:
-        logger.error(f"Failed to load config file: {e}")
-        raise
-
-
-def get_db_connections(config: dict) -> tuple:
-    """Create Oracle and PostgreSQL connections from config."""
-    # Oracle connection
-    oracle_config = config.get('oracle', {})
-    oracle_conn = OracleConnector(
-        host=oracle_config.get('host') or os.getenv('ORACLE_HOST'),
-        port=oracle_config.get('port') or int(os.getenv('ORACLE_PORT', 1521)),
-        service_name=oracle_config.get('service_name') or os.getenv('ORACLE_SERVICE_NAME'),
-        username=oracle_config.get('username') or os.getenv('ORACLE_USERNAME'),
-        password=oracle_config.get('password') or os.getenv('ORACLE_PASSWORD'),
-        schema=oracle_config.get('schema') or os.getenv('ORACLE_SCHEMA')
-    )
-    
-    # PostgreSQL connection
-    pg_config = config.get('postgresql', {})
-    pg_conn = PostgreSQLConnector(
-        host=pg_config.get('host') or os.getenv('PG_HOST'),
-        port=pg_config.get('port') or int(os.getenv('PG_PORT', 5432)),
-        database=pg_config.get('database') or os.getenv('PG_DATABASE'),
-        username=pg_config.get('username') or os.getenv('PG_USERNAME'),
-        password=pg_config.get('password') or os.getenv('PG_PASSWORD'),
-        schema=pg_config.get('schema') or os.getenv('PG_SCHEMA', 'public')
-    )
-    
-    return oracle_conn, pg_conn
-
-
 def main():
     """Main migration function."""
     parser = argparse.ArgumentParser(
-        description='Migrate database from Oracle to PostgreSQL'
+        description='Migrate database from Oracle to PostgreSQL using intelligent agents'
     )
     parser.add_argument(
         '--config',
         type=str,
-        default='config.yaml',
-        help='Path to configuration file (default: config.yaml)'
+        default='config/config.yaml',
+        help='Path to configuration file (default: config/config.yaml)'
+    )
+    parser.add_argument(
+        '--task',
+        type=str,
+        help='Specific task type (schema, data, validate, query, etc.)'
     )
     parser.add_argument(
         '--schema-only',
@@ -106,67 +80,174 @@ def main():
         default=1000,
         help='Batch size for data migration (default: 1000)'
     )
+    parser.add_argument(
+        '--list-agents',
+        action='store_true',
+        help='List all available agents and their capabilities'
+    )
+    parser.add_argument(
+        '--query',
+        type=str,
+        help='SQL query to convert (for query agent)'
+    )
+    parser.add_argument(
+        '--interactive',
+        action='store_true',
+        help='Run in interactive mode (prompts for connection details and shows migration plan)'
+    )
+
     
     args = parser.parse_args()
     
     try:
-        # Load configuration
-        logger.info(f"Loading configuration from {args.config}")
-        config = load_config(args.config)
-        
-        # Get database connections
-        logger.info("Establishing database connections...")
-        oracle_conn, pg_conn = get_db_connections(config)
-        
-        # Connect to databases
-        oracle_conn.connect()
-        pg_conn.connect()
-        
-        try:
-            # Determine tables to migrate
-            table_filter = None
-            if args.tables:
-                table_filter = [t.strip() for t in args.tables.split(',')]
-                logger.info(f"Migrating specific tables: {table_filter}")
+        # Handle interactive mode first
+        if args.interactive:
+            from src.utils.interactive_planner import run_interactive_mode
             
-            # Schema migration
+            logger.info("Starting interactive migration mode")
+            config, selected_tables = run_interactive_mode()
+            
+            if config is None:
+                logger.info("Interactive mode cancelled or failed")
+                return 1
+            
+            # Initialize agent router with the generated config
+            router = AgentRouter(config)
+            
+            # Execute migration tasks
+            tasks = []
+            
             if not args.data_only:
-                logger.info("Starting schema migration...")
-                schema_converter = SchemaConverter(oracle_conn, pg_conn)
-                schema_results = schema_converter.convert_all_tables(table_filter)
-                
-                failed_schemas = [t for t, success in schema_results.items() if not success]
-                if failed_schemas:
-                    logger.warning(f"Schema migration failed for: {failed_schemas}")
-                    if args.schema_only:
-                        return 1
+                tasks.append({
+                    'type': 'schema_migration',
+                    'config': config,
+                    'tables': selected_tables
+                })
             
-            # Data migration
             if not args.schema_only:
-                logger.info("Starting data migration...")
-                data_migrator = DataMigrator(
-                    oracle_conn, 
-                    pg_conn, 
-                    batch_size=args.batch_size
-                )
-                data_results = data_migrator.migrate_all_tables(
-                    table_filter, 
-                    truncate=args.truncate
-                )
+                tasks.append({
+                    'type': 'data_migration',
+                    'config': config,
+                    'tables': selected_tables,
+                    'truncate': args.truncate,
+                    'batch_size': args.batch_size
+                })
+            
+            # Execute tasks
+            all_results = []
+            for task in tasks:
+                logger.info(f"Executing task: {task['type']}")
+                result = router.execute_task(task)
+                all_results.append(result)
                 
-                failed_data = [t for t, success in data_results.items() if not success]
-                if failed_data:
-                    logger.warning(f"Data migration failed for: {failed_data}")
+                if result.get('status') == 'error':
+                    logger.error(f"Task {task['type']} failed: {result.get('message')}")
                     return 1
+            
+            # Summary
+            logger.info("=" * 50)
+            logger.info("Migration Summary:")
+            for result in all_results:
+                logger.info(f"  {result.get('agent', 'Unknown')}: {result.get('status', 'unknown')}")
             
             logger.info("Migration completed successfully!")
             return 0
+        
+        # List agents if requested (before loading config)
+        if args.list_agents:
+
+            router = AgentRouter()
+            print("\nAvailable Agents:")
+            print("=" * 50)
+            capabilities = router.get_agent_capabilities()
+            for agent_name, caps in capabilities.items():
+                print(f"\n{agent_name}:")
+                for cap in caps:
+                    print(f"  - {cap}")
+            return 0
+        
+        # Load configuration for other operations
+        logger.info(f"Loading configuration from {args.config}")
+        config = load_config(args.config)
+        
+        # Initialize agent router
+        router = AgentRouter(config)
+        
+        # Handle query conversion
+        if args.query:
+            task = {
+                'type': 'convert_query',
+                'query': args.query,
+                'config': config
+            }
+            logger.info(f"Executing task: {task.get('type')}")
+            result = router.execute_task(task)
             
-        finally:
-            # Disconnect from databases
-            oracle_conn.disconnect()
-            pg_conn.disconnect()
+            if result.get('status') == 'error':
+                logger.error(f"Task failed: {result.get('message')}")
+                return 1
             
+            logger.info("Task completed successfully!")
+            return 0
+        
+        # Handle specific task type
+        if args.task:
+            task = {
+                'type': args.task,
+                'config': config,
+                'tables': [t.strip() for t in args.tables.split(',')] if args.tables else None,
+                'truncate': args.truncate,
+                'batch_size': args.batch_size
+            }
+            logger.info(f"Executing task: {task.get('type')}")
+            result = router.execute_task(task)
+            
+            if result.get('status') == 'error':
+                logger.error(f"Task failed: {result.get('message')}")
+                return 1
+            
+            logger.info("Task completed successfully!")
+            return 0
+        
+        # Default migration task
+        tasks = []
+        
+        if not args.data_only:
+            tasks.append({
+                'type': 'schema_migration',
+                'config': config,
+                'tables': [t.strip() for t in args.tables.split(',')] if args.tables else None
+            })
+        
+        if not args.schema_only:
+            tasks.append({
+                'type': 'data_migration',
+                'config': config,
+                'tables': [t.strip() for t in args.tables.split(',')] if args.tables else None,
+                'truncate': args.truncate,
+                'batch_size': args.batch_size
+            })
+        
+        # Execute tasks
+        all_results = []
+        for task in tasks:
+            logger.info(f"Executing task: {task['type']}")
+            result = router.execute_task(task)
+            all_results.append(result)
+            
+            if result.get('status') == 'error':
+                logger.error(f"Task {task['type']} failed: {result.get('message')}")
+                return 1
+        
+        # Summary
+        logger.info("=" * 50)
+        logger.info("Migration Summary:")
+        for result in all_results:
+            logger.info(f"  {result.get('agent', 'Unknown')}: {result.get('status', 'unknown')}")
+        
+        logger.info("Migration completed successfully!")
+        return 0
+        
     except KeyboardInterrupt:
         logger.info("Migration interrupted by user")
         return 1
@@ -177,4 +258,3 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
-
