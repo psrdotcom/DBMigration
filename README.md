@@ -84,6 +84,70 @@ cp config/config.yaml.example config/config.yaml
 
 ## Usage
 
+### Interactive Mode (Recommended for First-Time Users)
+
+The interactive mode guides you through the migration process step-by-step, collecting connection details and showing a detailed migration plan before proceeding:
+
+```bash
+python migrate.py --interactive
+```
+
+**Interactive Workflow:**
+1. **Connection Details**: Prompts for Oracle and PostgreSQL connection information
+2. **Connection Validation**: Tests both database connections
+3. **Schema Discovery**: Lists all available tables in the Oracle schema
+4. **Table Selection**: Choose to migrate all tables or select specific ones
+5. **Migration Plan**: Displays a detailed plan with:
+   - Source and target database information
+   - List of tables with row counts and column counts
+   - Estimated migration complexity
+   - AI-powered insights and recommendations (if LLM is configured)
+6. **Approval**: Requires explicit confirmation before starting migration
+7. **Execution**: Proceeds with schema and data migration after approval
+
+**Example Interactive Session:**
+```
+--- Oracle Database Connection ---
+Oracle Host [localhost]: db.example.com
+Oracle Port [1521]: 1521
+Oracle Service Name [ORCL]: PROD
+Oracle Username: hr_user
+Oracle Password: ****
+Oracle Schema (leave empty to use username): HR
+
+--- PostgreSQL Database Connection ---
+PostgreSQL Host [localhost]: localhost
+PostgreSQL Port [5432]: 5432
+PostgreSQL Database: hr_prod
+PostgreSQL Username: postgres
+PostgreSQL Password: ****
+PostgreSQL Schema [public]: public
+
+# Test connection:
+# psql -h PG_HOST -U PG_USERNAME -d PG_DATABASE
+# sqlplus ORACLE_USERNAME/ORACLE_PASSWORD@ORACLE_HOST:ORACLE_PORT/ORACLE_SERVICE_NAME
+
+✓ All connections validated successfully!
+
+Found 15 tables in schema 'HR':
+  EMPLOYEES            DEPARTMENTS          JOBS
+  ...
+
+--- Table Selection ---
+Options:
+  1. Migrate all tables
+  2. Select specific tables
+
+Enter your choice [1]: 1
+
+--- MIGRATION PLAN ---
+Tables to migrate:     15
+Total rows (approx):   125,450
+Estimated complexity:  Medium
+
+Do you want to proceed with this migration? (yes/no): yes
+```
+
 ### Basic Migration
 
 ```bash

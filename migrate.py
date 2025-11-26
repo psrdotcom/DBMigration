@@ -12,6 +12,16 @@ from dotenv import load_dotenv
 from agents.agent_router import AgentRouter
 from src.utils.config_loader import load_config
 
+# Initialize Oracle Client for macOS
+try:
+    import cx_Oracle
+    import platform
+    if platform.system() == "Darwin":
+        lib_dir = "~/oracle/instantclient_23_3"
+        cx_Oracle.init_oracle_client(lib_dir=lib_dir)
+except Exception:
+    pass  # Ignore if cx_Oracle is not installed or already initialized
+
 # Load environment variables
 load_dotenv()
 
@@ -80,12 +90,72 @@ def main():
         type=str,
         help='SQL query to convert (for query agent)'
     )
+    parser.add_argument(
+        '--interactive',
+        action='store_true',
+        help='Run in interactive mode (prompts for connection details and shows migration plan)'
+    )
+
     
     args = parser.parse_args()
     
     try:
+        # Handle interactive mode first
+        if args.interactive:
+            from src.utils.interactive_planner import run_interactive_mode
+            
+            logger.info("Starting interactive migration mode")
+            config, selected_tables = run_interactive_mode()
+            
+            if config is None:
+                logger.info("Interactive mode cancelled or failed")
+                return 1
+            
+            # Initialize agent router with the generated config
+            router = AgentRouter(config)
+            
+            # Execute migration tasks
+            tasks = []
+            
+            if not args.data_only:
+                tasks.append({
+                    'type': 'schema_migration',
+                    'config': config,
+                    'tables': selected_tables
+                })
+            
+            if not args.schema_only:
+                tasks.append({
+                    'type': 'data_migration',
+                    'config': config,
+                    'tables': selected_tables,
+                    'truncate': args.truncate,
+                    'batch_size': args.batch_size
+                })
+            
+            # Execute tasks
+            all_results = []
+            for task in tasks:
+                logger.info(f"Executing task: {task['type']}")
+                result = router.execute_task(task)
+                all_results.append(result)
+                
+                if result.get('status') == 'error':
+                    logger.error(f"Task {task['type']} failed: {result.get('message')}")
+                    return 1
+            
+            # Summary
+            logger.info("=" * 50)
+            logger.info("Migration Summary:")
+            for result in all_results:
+                logger.info(f"  {result.get('agent', 'Unknown')}: {result.get('status', 'unknown')}")
+            
+            logger.info("Migration completed successfully!")
+            return 0
+        
         # List agents if requested (before loading config)
         if args.list_agents:
+
             router = AgentRouter()
             print("\nAvailable Agents:")
             print("=" * 50)
