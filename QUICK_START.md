@@ -27,7 +27,7 @@ Both databases are now ready for migration testing:
 
 ### 1. Wait for Oracle to Complete Setup
 
-Check the terminal running `./setup_oracle_docker.sh`. Wait for:
+Check the terminal running `./scripts/setup_oracle_docker.sh`. Wait for:
 ```
 ✓ Oracle Database is starting!
 ```
@@ -38,10 +38,10 @@ Then wait about 2 minutes for Oracle to fully initialize.
 
 ```bash
 # Option A: Using Python (recommended)
-python load_sample_data.py
+python scripts/load_sample_data.py
 
 # Option B: Using SQL*Plus (if installed)
-sqlplus testuser/testpass@localhost:1521/XEPDB1 @create_sample_tables.sql
+sqlplus testuser/testpass@localhost:1521/XEPDB1 @scripts/create_sample_tables.sql
 ```
 
 This creates 6 tables with 49 rows of sample data.
@@ -74,7 +74,7 @@ python migrate.py --config config/config.yaml --tables CUSTOMERS,ORDERS,ORDER_IT
 
 ```bash
 # Test PostgreSQL connection and view migrated data
-python test_postgres_connection.py
+python scripts/test_postgres_connection.py
 
 # Or connect with psql
 psql -h localhost -U testuser -d migration_test
@@ -213,10 +213,10 @@ docker logs -f oracle-test
 
 ## 📚 Documentation
 
-- **POSTGRES_SETUP.md** - Detailed PostgreSQL setup guide
-- **ORACLE_SETUP.md** - Detailed Oracle setup guide
-- **README.md** - Main project documentation
-- **AGENTS.md** - Agent system documentation
+- `docs/POSTGRES_SETUP.md` - Detailed PostgreSQL setup guide
+- `docs/ORACLE_SETUP.md` - Detailed Oracle setup guide
+- `README.md` - Main project documentation
+- `docs/AGENTS.md` - Agent system documentation
 
 ---
 
@@ -224,8 +224,8 @@ docker logs -f oracle-test
 
 Everything is set up! Once Oracle finishes starting:
 
-1. Load sample data: `python load_sample_data.py`
+1. Load sample data: `python scripts/load_sample_data.py`
 2. Run migration: `python migrate.py --interactive`
-3. Verify results: `python test_postgres_connection.py`
+3. Verify results: `python scripts/test_postgres_connection.py`
 
 Happy migrating! 🚀

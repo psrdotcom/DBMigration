@@ -2,7 +2,7 @@
 Database connection handlers for Oracle and PostgreSQL.
 """
 
-import cx_Oracle
+import oracledb
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
@@ -27,10 +27,15 @@ class OracleConnector:
         self.cursor = None
     
     def connect(self):
-        """Establish connection to Oracle database."""
+        """Establish connection to Oracle database.
+        
+        This method works in both Thin Mode (no Oracle Client required) and 
+        Thick Mode (with Oracle Instant Client). The mode is determined by 
+        whether init_oracle_client() was called before this connection.
+        """
         try:
-            dsn = cx_Oracle.makedsn(self.host, self.port, service_name=self.service_name)
-            self.connection = cx_Oracle.connect(
+            dsn = oracledb.makedsn(self.host, self.port, service_name=self.service_name)
+            self.connection = oracledb.connect(
                 user=self.username,
                 password=self.password,
                 dsn=dsn

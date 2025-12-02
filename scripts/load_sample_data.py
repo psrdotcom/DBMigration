@@ -3,40 +3,49 @@
 Script to load sample data into Oracle Database using Python.
 This is an alternative to running the SQL file directly.
 """
-
-import cx_Oracle
+import os
+import oracledb
 import sys
 
 def create_sample_tables():
     """Create sample tables and load data into Oracle."""
     
-    # Initialize Oracle Client
+    # Try to initialize Oracle Client (Thick Mode) if available
+    # Otherwise, oracledb will use Thin Mode automatically
     try:
         import platform
         if platform.system() == "Darwin":  # macOS
-            lib_dir = "/Users/sureshrajupilli/oracle/instantclient_23_3"
-            cx_Oracle.init_oracle_client(lib_dir=lib_dir)
+            lib_dir = "/opt/oracle/instantclient_23_3"
+            if os.path.exists(lib_dir):
+                try:
+                    oracledb.init_oracle_client(lib_dir=lib_dir)
+                    print("✓ Using Oracle Thick Mode")
+                except Exception:
+                    print("Note: Using Oracle Thin Mode (no client required)")
+            else:
+                print("Note: Using Oracle Thin Mode (no client required)")
     except Exception as e:
-        print(f"Warning: Could not initialize Oracle Client: {e}")
-        print("Make sure you have Oracle Instant Client installed.")
+        print(f"Note: Using Oracle Thin Mode: {e}")
 
     # Connection details
     connection_params = {
         'user': os.getenv('ORACLE_USERNAME', 'testuser'),
         'password': os.getenv('ORACLE_PASSWORD', 'testpass'),
-        'dsn': os.getenv('ORACLE_DSN', 'localhost:1521/XEPDB1')
+        'dsn': os.getenv('ORACLE_DSN', '54.152.98.220:1521/XEPDB1')
     }
     
     print("Connecting to Oracle Database...")
     try:
-        conn = cx_Oracle.connect(**connection_params)
+        conn = oracledb.connect(**connection_params)
         cursor = conn.cursor()
         print("✓ Connected successfully!")
         print()
         
         # Read and execute SQL file
         print("Creating tables and loading sample data...")
-        with open('create_sample_tables.sql', 'r') as f:
+        # Assumes script is run from project root
+        sql_path = os.path.join('scripts', 'create_sample_tables.sql')
+        with open(sql_path, 'r') as f:
             sql_script = f.read()
         
         # Better SQL splitting logic
@@ -76,7 +85,7 @@ def create_sample_tables():
             try:
                 # print(f"Executing statement {i+1}...")
                 cursor.execute(statement)
-            except cx_Oracle.DatabaseError as e:
+            except oracledb.DatabaseError as e:
                 error, = e.args
                 # Ignore "table or view does not exist" errors during drop
                 if error.code != 942:
@@ -107,13 +116,13 @@ def create_sample_tables():
         cursor.close()
         conn.close()
         
-    except cx_Oracle.DatabaseError as e:
+    except oracledb.DatabaseError as e:
         error, = e.args
         print(f"❌ Database error: {error.message}")
         sys.exit(1)
     except FileNotFoundError:
-        print("❌ create_sample_tables.sql file not found!")
-        print("Make sure you're running this script from the DBMigration directory.")
+        print("❌ scripts/create_sample_tables.sql file not found!")
+        print("Make sure you're running this script from the DBMigration project root.")
         sys.exit(1)
     except Exception as e:
         print(f"❌ Error: {e}")

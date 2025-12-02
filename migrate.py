@@ -12,15 +12,54 @@ from dotenv import load_dotenv
 from agents.agent_router import AgentRouter
 from src.utils.config_loader import load_config
 
-# Initialize Oracle Client for macOS
+# Initialize Oracle Client (Optional - Thick Mode)
+# By default, oracledb uses Thin Mode which works on all platforms without Oracle Instant Client
+# Thick Mode is only needed for advanced Oracle features
 try:
-    import cx_Oracle
+    import oracledb
     import platform
+    import os
+    
+    # Try to initialize Thick Mode if Oracle Instant Client is available
+    # If this fails, oracledb will automatically use Thin Mode
+    thick_mode_initialized = False
+    
     if platform.system() == "Darwin":
-        lib_dir = "~/oracle/instantclient_23_3"
-        cx_Oracle.init_oracle_client(lib_dir=lib_dir)
+        lib_dir = "/opt/oracle/instantclient_23_3"
+        if os.path.exists(lib_dir):
+            try:
+                oracledb.init_oracle_client(lib_dir=lib_dir)
+                thick_mode_initialized = True
+                print(f"✓ Oracle Thick Mode initialized from: {lib_dir}")
+            except Exception as e:
+                print(f"Note: Oracle Thick Mode not available, using Thin Mode: {e}")
+    elif platform.system() == "Linux":
+        # Check for common Instant Client locations
+        possible_paths = [
+            "/opt/oracle/instantclient_23_3",
+            "/opt/oracle/instantclient_21_12",
+            "/usr/lib/oracle/21/client64/lib",
+            "/usr/lib/oracle/19/client64/lib"
+        ]
+        for path in possible_paths:
+            if os.path.exists(path):
+                try:
+                    oracledb.init_oracle_client(lib_dir=path)
+                    thick_mode_initialized = True
+                    print(f"✓ Oracle Thick Mode initialized from: {path}")
+                    break
+                except Exception as e:
+                    continue
+        
+        if not thick_mode_initialized:
+            print("Note: Oracle Instant Client not found, using Thin Mode (no client required)")
+    
+    # Windows and other platforms will use Thin Mode by default
+    if not thick_mode_initialized and platform.system() not in ["Darwin", "Linux"]:
+        print(f"Note: Using Oracle Thin Mode on {platform.system()} (no client required)")
+        
 except Exception:
-    pass  # Ignore if cx_Oracle is not installed or already initialized
+    pass  # Ignore if oracledb is not installed
 
 # Load environment variables
 load_dotenv()

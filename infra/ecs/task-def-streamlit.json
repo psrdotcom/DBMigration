@@ -1,0 +1,89 @@
+{
+  "family": "dbmigration-streamlit",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::123456789012:role/dbmigration-ecs-execution-role",
+  "taskRoleArn": "arn:aws:iam::123456789012:role/dbmigration-ecs-task-role",
+  "containerDefinitions": [
+    {
+      "name": "dbmigration-app",
+      "image": "123456789012.dkr.ecr.us-east-1.amazonaws.com/dbmigration-app:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8501,
+          "hostPort": 8501,
+          "protocol": "tcp"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/dbmigration-streamlit",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "environment": [
+        {
+          "name": "LLM_PROVIDER",
+          "value": "openai"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "OPENAI_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:dbmigration/openai"
+        },
+        {
+          "name": "OPENAI_MODEL",
+          "valueFrom": "arn:aws:ssm:us-east-1:123456789012:parameter/dbmigration/openai/model"
+        },
+        {
+          "name": "ORACLE_HOST",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:dbmigration/oracle:host::"
+        },
+        {
+          "name": "ORACLE_PORT",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:dbmigration/oracle:port::"
+        },
+        {
+          "name": "ORACLE_SERVICE_NAME",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:dbmigration/oracle:service_name::"
+        },
+        {
+          "name": "ORACLE_USERNAME",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:dbmigration/oracle:username::"
+        },
+        {
+          "name": "ORACLE_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:dbmigration/oracle:password::"
+        },
+        {
+          "name": "PG_HOST",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:dbmigration/postgres:host::"
+        },
+        {
+          "name": "PG_PORT",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:dbmigration/postgres:port::"
+        },
+        {
+          "name": "PG_DATABASE",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:dbmigration/postgres:database::"
+        },
+        {
+          "name": "PG_USERNAME",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:dbmigration/postgres:username::"
+        },
+        {
+          "name": "PG_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:dbmigration/postgres:password::"
+        }
+      ]
+    }
+  ]
+}
+
+

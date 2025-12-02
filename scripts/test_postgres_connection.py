@@ -81,7 +81,7 @@ def test_connection():
         print("Troubleshooting:")
         print("  1. Make sure PostgreSQL is running: brew services list")
         print("  2. Start PostgreSQL: brew services start postgresql@14")
-        print("  3. Run setup script: ./setup_postgres.sh")
+        print("  3. Run setup script: ./scripts/setup_postgres.sh")
         return False
         
     except Exception as e:
