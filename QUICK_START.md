@@ -9,7 +9,7 @@ Both databases are now ready for migration testing:
 - **Host**: localhost
 - **Port**: 5432
 - **Database**: migration_test
-- **Username**: testuser
+- **Username**: postgres
 - **Password**: testpass
 - **State**: Empty (ready to receive migrated data)
 
@@ -77,7 +77,7 @@ python migrate.py --config config/config.yaml --tables CUSTOMERS,ORDERS,ORDER_IT
 python scripts/test_postgres_connection.py
 
 # Or connect with psql
-psql -h localhost -U testuser -d migration_test
+psql -h localhost -U postgres -d migration_test
 
 # In psql, list tables:
 \dt
@@ -125,7 +125,7 @@ brew services stop postgresql@14
 brew services list | grep postgresql
 
 # Connect to database
-psql -h localhost -U testuser -d migration_test
+psql -h localhost -U postgres -d migration_test
 ```
 
 ### Oracle Management (Docker)

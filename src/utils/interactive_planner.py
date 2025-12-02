@@ -38,7 +38,7 @@ class InteractivePlanner:
             'host': input("Oracle Host [localhost]: ").strip() or 'localhost',
             'port': int(input("Oracle Port [1521]: ").strip() or '1521'),
             'service_name': input("Oracle Service Name [XEPDB1]: ").strip() or 'XEPDB1',
-            'username': input("Oracle Username: [testuser]").strip() or 'testuser',
+            'username': input("Oracle Username [testuser]: ").strip() or 'testuser',
             'password': getpass.getpass("Oracle Password: "),
             'schema': input("Oracle Schema (leave empty to use username): ").strip()
         }
@@ -52,8 +52,8 @@ class InteractivePlanner:
         self.pg_config = {
             'host': input("PostgreSQL Host [localhost]: ").strip() or 'localhost',
             'port': int(input("PostgreSQL Port [5432]: ").strip() or '5432'),
-            'database': input("PostgreSQL Database: [migration_test]").strip() or 'migration_test',
-            'username': input("PostgreSQL Username: [testuser]").strip() or 'testuser',
+            'database': input("PostgreSQL Database [migration_test]: ").strip() or 'migration_test',
+            'username': input("PostgreSQL Username [postgres]: ").strip() or 'postgres',
             'password': getpass.getpass("PostgreSQL Password: "),
             'schema': input("PostgreSQL Schema [public]: ").strip() or 'public'
         }

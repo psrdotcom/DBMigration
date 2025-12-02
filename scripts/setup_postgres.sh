@@ -44,27 +44,27 @@ psql postgres << EOF
 DROP DATABASE IF EXISTS migration_test;
 
 -- Drop user if exists
-DROP USER IF EXISTS testuser;
+DROP USER IF EXISTS postgres;
 
 -- Create user
-CREATE USER testuser WITH PASSWORD 'testpass';
+CREATE USER postgres WITH PASSWORD 'testpass';
 
 -- Create database
-CREATE DATABASE migration_test OWNER testuser;
+CREATE DATABASE migration_test OWNER postgres;
 
 -- Grant privileges
-GRANT ALL PRIVILEGES ON DATABASE migration_test TO testuser;
+GRANT ALL PRIVILEGES ON DATABASE migration_test TO postgres;
 
 \c migration_test
 
 -- Grant schema privileges
-GRANT ALL ON SCHEMA public TO testuser;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO testuser;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO testuser;
+GRANT ALL ON SCHEMA public TO postgres;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO postgres;
 
 -- Set default privileges for future objects
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO testuser;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO testuser;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO postgres;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO postgres;
 
 \q
 EOF

@@ -15,7 +15,7 @@ def test_connection():
         'host': os.getenv('PG_HOST', 'localhost'),
         'port': int(os.getenv('PG_PORT', 5432)),
         'database': os.getenv('PG_DATABASE', 'migration_test'),
-        'user': os.getenv('PG_USER', 'testuser'),
+        'user': os.getenv('PG_USER', 'postgres'),
         'password': os.getenv('PG_PASSWORD', 'testpass')
     }
     
