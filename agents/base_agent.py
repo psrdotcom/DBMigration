@@ -8,6 +8,13 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List
 from enum import Enum
 
+# Load environment variables from .env file if available
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # dotenv is optional
+
 logger = logging.getLogger(__name__)
 
 
@@ -52,7 +59,7 @@ class BaseAgent(ABC):
         try:
             if self.provider == LLMProvider.OPENAI:
                 from openai import OpenAI
-                api_key = os.getenv('OPENAI_API_KEY')
+                api_key = os.getenv('OPENAI_API_KEY', '').strip()
                 if not api_key:
                     logger.warning("OPENAI_API_KEY not set. LLM features will be disabled. Set OPENAI_API_KEY environment variable to enable.")
                     return None
@@ -60,7 +67,7 @@ class BaseAgent(ABC):
             
             elif self.provider == LLMProvider.ANTHROPIC:
                 from anthropic import Anthropic
-                api_key = os.getenv('ANTHROPIC_API_KEY')
+                api_key = os.getenv('ANTHROPIC_API_KEY', '').strip()
                 if not api_key:
                     logger.warning("ANTHROPIC_API_KEY not set. LLM features will be disabled. Set ANTHROPIC_API_KEY environment variable to enable.")
                     return None
